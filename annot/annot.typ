@@ -65,7 +65,20 @@
   show math.equation.where(block: false): mark
   deco(x)
 }
-#let _highlighted(fill, x) = _decorate(x, highlight.with(fill: fill), box.with(fill: fill, outset: (y: 1.5pt)))
+// One band height for every font (raw text) and for math; needs context.
+#let _band(fill, scale: 1) = {
+  let (top, bottom) = ((scale * 0.92em).to-absolute(), (scale * 0.28em).to-absolute())
+  let mark(it) = context {
+    let w = measure(it).width
+    box({
+      box(width: w, height: 0pt, place(dy: -top, rect(width: w, height: top + bottom, fill: fill, stroke: none)))
+      h(-w)
+      it
+    })
+  }
+  (highlight.with(fill: fill, top-edge: top, bottom-edge: -bottom), mark)
+}
+#let _highlighted(fill, x) = _decorate(x, .._band(fill))
 #let _struck(x) = {
   let s = 0.7pt + _colors.del
   let mark(it) = context box(it + place(horizon + left, line(length: measure(it).width, stroke: s)))
@@ -112,7 +125,7 @@
       let num = context _counter.display()
       if inline {
         [ ]
-        highlight(fill: c.lighten(88%), text(font: _font, size: 0.8em, {
+        _band(c.lighten(88%), scale: 0.8).first()(text(font: _font, size: 0.8em, {
           _header(kind, by, num)
           [ ]
           body
