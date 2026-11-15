@@ -44,6 +44,13 @@ Every annotation takes an optional `by:` with the author's initials.
 
 An outline shows the accepted text of annotations in headings, so they are not repeated there.
 
+### Listing annotations
+
+`#annot-list()` shows every annotation in a box: its page, kind, number, author and text,
+each linked to its place. Put it at the start of a draft for an overview of what is still
+open. `#annot-list(kinds: ("todo", "ask"))` keeps only the given kinds. It shows nothing in the
+clean and final modes, nor when there are no annotations.
+
 ### Modes
 
 ```sh

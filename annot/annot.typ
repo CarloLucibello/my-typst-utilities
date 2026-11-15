@@ -11,6 +11,7 @@
 // Inside an equation, give the annotated part its own `$...$`: $a #del[$+ b$]$
 // Drafting instructions:   #brief[what this section should say]
 // Suggested edits:         #del[old]  #ins[new]  #repl[old][new]
+// List of all annotations: #annot-list()  or  #annot-list(kinds: ("todo", "ask"))
 // Typst swallows a `;` right after `#todo[...]`: put annotations after a semicolon, or write `\;`.
 //
 // Modes: typst compile --input annot=draft|clean|final
@@ -33,9 +34,10 @@
 #let _mode-default = sys.inputs.at("annot", default: "draft")
 #let _mode = state("annot-mode", _mode-default)
 #let _counter = counter("annot")
-// An outline repeats heading bodies: there annotations show their accepted text, unnumbered.
-#let _in-outline = state("annot-in-outline", false)
-#let _mode-here() = if _in-outline.get() { "clean" } else { _mode.get() }
+// Outlines and the annotation list repeat content: there annotations show their accepted text, unnumbered.
+#let _quiet = state("annot-quiet", false)
+#let _mode-here() = if _quiet.get() { "clean" } else { _mode.get() }
+#let _quietly(it) = _quiet.update(true) + it + _quiet.update(false)
 
 #let _plain(it) = {
   if type(it) == str { it } else if type(it) != content { "" } else if it.has("text") {
@@ -94,7 +96,7 @@
 }
 
 #let _header(kind, by, num) = {
-  text(fill: _colors.at(kind), weight: "bold")[#num #upper(kind)]
+  text(fill: _colors.at(kind), weight: "bold")[#if num != none [#num ]#upper(kind)]
   if by != none [ · #by]
 }
 
@@ -191,6 +193,27 @@
   [#old → #new],
 )
 
+#let annot-list(kinds: auto) = context {
+  let kinds = if type(kinds) == str { (kinds,) } else { kinds }
+  assert(kinds == auto or kinds.all(k => k in _colors), message: "annot: kinds must be among " + _colors.keys().join(", "))
+  if _mode-here() != "draft" { return }
+  let all = query(<annot>).filter(n => kinds == auto or n.value.kind in kinds)
+  if all.len() == 0 { return }
+  let row(n) = {
+    let (v, loc) = (n.value, n.location())
+    let num = if v.kind in ("todo", "ask", "check", "note") { _counter.at(loc).first() }
+    let body = if v.kind == "del" { _struck(v.body) } else if v.kind == "ins" { _added(v.body) } else { v.body }
+    (link(loc)[p. #loc.page()], link(loc, _header(v.kind, v.by, num)), body)
+  }
+  _quietly(block(width: 100%, fill: luma(248), stroke: 0.6pt + luma(200), inset: 6pt, radius: 2pt, {
+    set text(font: _font, size: 8.5pt, fill: black, style: "normal", weight: "regular")
+    set par(justify: false, first-line-indent: 0pt, leading: 0.5em)
+    text(fill: luma(110), weight: "bold")[ANNOTATIONS · #all.len()]
+    v(0.2em)
+    grid(columns: 3, column-gutter: 1em, row-gutter: 0.6em, ..all.map(row).flatten())
+  }))
+}
+
 #let _length(x, fallback) = if type(x) == length { x.to-absolute() } else { fallback }
 
 #let _foreground = context {
@@ -243,7 +266,7 @@
   let mode = sys.inputs.at("annot", default: mode)
   assert(mode in ("draft", "clean", "final"), message: "annot: mode must be draft, clean or final, got " + repr(mode))
   if mode != _mode-default { _mode.update(mode) }
-  show outline: it => _in-outline.update(true) + it + _in-outline.update(false)
+  show outline: _quietly
   if mode == "draft" {
     set page(foreground: _foreground)
     body

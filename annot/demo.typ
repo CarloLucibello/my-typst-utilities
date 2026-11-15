@@ -40,3 +40,11 @@ accepted text.
 Crowded margins: comments are stacked below each other#todo[One.]#todo[Two.]#todo[Three
   is a longer comment that needs several lines in the narrow margin.]#todo[Four.]#todo[Five.]#todo[Six.]#todo[Seven.]#todo[Eight.]#todo[Nine.]#todo[Ten.]#todo[Eleven.]
 and continue in the left margin when they would run past the bottom of the text area.
+
+== Listing the annotations
+
+`#annot-list()` lists every annotation with its page, linked to its place, and
+shows nothing in the clean PDF. It fits at the start of a draft;
+`kinds: ("todo", "ask")` keeps only some kinds.
+
+#annot-list()
