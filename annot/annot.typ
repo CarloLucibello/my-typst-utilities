@@ -33,6 +33,9 @@
 #let _mode-default = sys.inputs.at("annot", default: "draft")
 #let _mode = state("annot-mode", _mode-default)
 #let _counter = counter("annot")
+// An outline repeats heading bodies: there annotations show their accepted text, unnumbered.
+#let _in-outline = state("annot-in-outline", false)
+#let _mode-here() = if _in-outline.get() { "clean" } else { _mode.get() }
 
 #let _plain(it) = {
   if type(it) == str { it } else if type(it) != content { "" } else if it.has("text") {
@@ -117,7 +120,7 @@
   let (span, body) = if pos.len() == 2 { pos } else { (none, pos.first()) }
   let c = _colors.at(kind)
   context {
-    let mode = _mode.get()
+    let mode = _mode-here()
     if mode == "draft" {
       if span != none { _highlighted(c.lighten(80%), span) }
       _counter.step()
@@ -144,7 +147,7 @@
 #let note(by: none, inline: false, ..args) = _margin("note", by, inline, args)
 
 #let brief(by: none, body) = context {
-  let mode = _mode.get()
+  let mode = _mode-here()
   let c = _colors.brief
   if mode == "draft" {
     block(
@@ -167,7 +170,7 @@
 }
 
 #let _edit(kind, by, draft, accepted, body) = context {
-  let mode = _mode.get()
+  let mode = _mode-here()
   if mode == "draft" {
     draft
     if by != none { _tag(_colors.at(kind), by, size: 5pt) }
@@ -240,6 +243,7 @@
   let mode = sys.inputs.at("annot", default: mode)
   assert(mode in ("draft", "clean", "final"), message: "annot: mode must be draft, clean or final, got " + repr(mode))
   if mode != _mode-default { _mode.update(mode) }
+  show outline: it => _in-outline.update(true) + it + _in-outline.update(false)
   if mode == "draft" {
     set page(foreground: _foreground)
     body

@@ -42,6 +42,8 @@ Every annotation takes an optional `by:` with the author's initials.
 | `#brief[...]` | box saying what a section should contain | hidden |
 | `#del[old]`, `#ins[new]`, `#repl[old][new]` | red strikethrough, green underline | edit applied |
 
+An outline shows the accepted text of annotations in headings, so they are not repeated there.
+
 ### Modes
 
 ```sh
