@@ -214,7 +214,10 @@
   }))
 }
 
-#let _length(x, fallback) = if type(x) == length { x.to-absolute() } else { fallback }
+// page.margin reports sides as relative lengths (0% + 45pt), against the page width or height.
+#let _length(x, fallback, full) = if type(x) == length { x.to-absolute() } else if type(x) == relative {
+  x.length.to-absolute() + x.ratio * full
+} else if type(x) == ratio { x * full } else { fallback }
 
 #let _foreground = context {
   let all = query(<annot>)
@@ -223,8 +226,9 @@
   let m = page.margin
   let fixed-height = type(page.height) == length
   let auto-margin = 2.5 / 21 * if fixed-height { calc.min(page.width, page.height) } else { page.width }
-  let side(k, alt) = if type(m) == dictionary { _length(m.at(k, default: m.at(alt, default: auto)), auto-margin) } else {
-    _length(m, auto-margin)
+  let side(k, alt) = {
+    let full = if k in ("top", "bottom") and fixed-height { page.height } else { page.width }
+    _length(if type(m) == dictionary { m.at(k, default: m.at(alt, default: auto)) } else { m }, auto-margin, full)
   }
   let (ml, mr, mt, mb) = (side("left", "x"), side("right", "x"), side("top", "y"), side("bottom", "y"))
   let bottom = if fixed-height { page.height - mb } else { 1e5pt }
