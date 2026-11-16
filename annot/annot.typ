@@ -232,7 +232,7 @@
   }
   let (ml, mr, mt, mb) = (side("left", "x"), side("right", "x"), side("top", "y"), side("bottom", "y"))
   let bottom = if fixed-height { page.height - mb } else { 1e5pt }
-  let columns = (
+  let sides = (
     (x: page.width - mr + _gap, width: mr - 2 * _gap, y: 0pt),
     (x: _gap, width: ml - 2 * _gap, y: 0pt),
   )
@@ -245,14 +245,18 @@
   for n in notes.sorted(key: n => n.location().position().y) {
     let v = n.value
     let num = _counter.at(n.location()).first()
-    let y0 = n.location().position().y - (0.6em).to-absolute()
-    for (i, col) in columns.enumerate() {
-      let b = _note-box(v.kind, v.by, num, v.body, col.width)
-      let y = calc.max(y0, col.y)
+    let (x0, y0) = (n.location().position().x, n.location().position().y - (0.6em).to-absolute())
+    // Right margin first, but with several columns the margin next to the comment's column.
+    let order = if page.columns > 1 and x0 < page.width / 2 { (1, 0) } else { (0, 1) }
+    for (k, i) in order.enumerate() {
+      let side = sides.at(i)
+      let b = _note-box(v.kind, v.by, num, v.body, side.width)
       let h = measure(b).height
-      if y + h <= bottom or i == columns.len() - 1 {
-        place(top + left, dx: col.x, dy: y, b)
-        columns.at(i).y = y + h + 1.5pt
+      // Near the page bottom, move the note up rather than to the other margin.
+      let y = calc.max(side.y, calc.min(y0, bottom - h))
+      if y + h <= bottom or k == order.len() - 1 {
+        place(top + left, dx: side.x, dy: y, b)
+        sides.at(i).y = y + h + 1.5pt
         break
       }
     }

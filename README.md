@@ -74,3 +74,5 @@ document without annotations compiles to the same pages as before.
   `$f = a #del[$+ b$]$`. Otherwise the brackets hold text, not math.
 - Margin comments use the page's existing margin, about 19 mm on A4 with 25 mm margins, so
   keep them short. Use `inline: true` or a `#brief` for longer text.
+- Margin comments go in the right margin; on pages with several columns, in the margin next to
+  the comment's column. When that margin is full, they continue in the other one.
